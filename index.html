@@ -3,1173 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nail Art Studio - מערכת תורים</title>
+    <title>Studio Nails</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Assistant', sans-serif; background-color: #f4f2f0; }
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #b88a6a;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 8px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .tab-active { border-bottom: 2px solid #b88a6a; color: #b88a6a; font-weight: bold; }
-        .btn-disabled { opacity: 0.5; cursor: not-allowed; }
-        .right-bg {
-            background-image: url('https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=2076&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-        }
+        :root { --accent: #b88a6a; --gold: #c9a063; }
+        body { font-family: 'Assistant', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        .bg-container { background-size: cover; background-position: center; height: 100vh; display: flex; align-items: center; justify-content: center; transition: 0.7s; }
+        .bg-client { background-image: url('4.jpg'); }
+        .bg-admin { background-image: url('2.jpg'); }
+        .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border-radius: 30px; width: 90%; max-width: 450px; height: 85vh; display: flex; flex-direction: column; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-style { background: white; border: 1px solid rgba(184, 138, 106, 0.3); padding: 12px; border-radius: 15px; width: 100%; outline: none; margin-bottom: 10px; }
+        .btn-gold { background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); color: white; font-weight: bold; padding: 15px; border-radius: 15px; width: 100%; transition: 0.2s; cursor: pointer; }
+        .btn-gold:active { transform: scale(0.98); }
+        .btn-whatsapp { background-color: #25d366; color: white; font-weight: bold; padding: 15px; border-radius: 15px; width: 100%; cursor: pointer; text-align: center; }
+        .tab-active { color: var(--accent); border-bottom: 3px solid var(--accent); font-weight: 700; }
+        .time-chip { padding: 8px; border-radius: 12px; border: 1px solid var(--accent); text-align: center; cursor: pointer; font-size: 0.9rem; background: white; }
+        .time-chip.selected { background: var(--accent); color: white; }
         
-        /* טוסטים */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #10b981;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 999px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        /* לוח שנה */
-        .custom-calendar {
-            background: white;
-            border: 1px solid #fbcfe8;
-            border-radius: 16px;
-            padding: 12px;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px -5px rgba(0,0,0,0.1);
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding: 0 4px;
-        }
-        .calendar-month {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.8rem;
-            color: #b88a6a;
-            margin-bottom: 8px;
-        }
-        .calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            width: 32px;
-            height: 32px;
-            margin: 0 auto;
-        }
-        .calendar-day:hover {
-            background-color: #f3f4f6;
-            transform: scale(1.05);
-        }
-        .calendar-day.available {
-            background-color: #3b82f6;
-            color: white;
-            font-weight: bold;
-        }
-        .calendar-day.unavailable {
-            background-color: #6b7280;
-            color: white;
-            font-weight: bold;
-        }
-        .calendar-day.selected {
-            border: 2px solid #b88a6a;
-            transform: scale(1.05);
-        }
-        .calendar-day.empty-day {
-            background-color: #e5e7eb;
-            color: #9ca3af;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .calendar-day.empty-day:hover {
-            background-color: #e5e7eb;
-            transform: none;
-        }
-        .calendar-day.empty {
-            cursor: default;
-            visibility: hidden;
-        }
-        .nav-btn {
-            background: #f3f4f6;
-            border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .nav-btn:hover {
-            background: #e5e7eb;
-        }
-        
-        /* מקרא */
-        .legend-compact {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            margin-top: 8px;
-            font-size: 0.75rem;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        
-        /* Phone modal */
-        .phone-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        .phone-modal.hidden {
-            display: none;
-        }
-        .phone-modal-content {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        /* טופס */
-        .form-container {
-            max-width: 380px;
-            margin: 0 auto;
-        }
-        .form-container input, .form-container select {
-            padding: 10px 14px;
-            font-size: 1rem;
-        }
-        
-        /* הודעת שגיאה לשדות */
-        .field-error {
-            border-color: #ef4444 !important;
-            background-color: #fef2f2 !important;
-        }
-        
-        /* כפתורי בחירת מפעיל */
-        .carrier-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .carrier-btn {
-            padding: 10px;
-            border: 1px solid #fbcfe8;
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        .carrier-btn:hover {
-            background: #fdf2f8;
-        }
-        .carrier-btn.selected {
-            background: #b88a6a;
-            color: white;
-            border-color: #b88a6a;
-        }
-        
-        .sms-option {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-        }
-        .whatsapp-option {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-day { padding: 8px; border-radius: 50%; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .day-available { background-color: #e0f2fe; color: #0369a1; font-weight: bold; }
+        .day-selected { background-color: var(--accent) !important; color: white !important; }
+        .day-header { font-weight: bold; color: #b88a6a; padding-bottom: 5px; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body id="body-bg" class="bg-container bg-client">
 
-    <!-- טוסטים -->
-    <div id="toast-container" class="fixed bottom-4 left-4 z-50"></div>
-
-    <!-- מודאל בקשת טלפון -->
-    <div id="phone-modal" class="phone-modal hidden">
-        <div class="phone-modal-content">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">📱 אישור התור</h3>
-            <p class="text-gray-600 mb-4">איך לשלוח אישור?</p>
-            <input type="tel" id="client-phone" class="w-full p-3 border border-pink-200 rounded-xl mb-4" placeholder="050-1234567" dir="ltr">
-            
-            <!-- אפשרות 1: SMS (דרך וואטסאפ) -->
-            <div class="whatsapp-option">
-                <h4 class="font-bold text-green-700 mb-2 flex items-center gap-2">
-                    <span>📱 וואטסאפ (מומלץ)</span>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">חינם</span>
-                </h4>
-                <p class="text-xs text-gray-500 mb-2">שולח הודעה לוואטסאפ - הלקוחה תקבל ותוכל להשיב</p>
-                <button onclick="sendWhatsAppConfirmation()" class="w-full bg-[#25d366] hover:bg-[#20b859] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
-                    <span>📱</span> שלחי בוואטסאפ
-                </button>
+    <div class="glass-panel">
+        <div class="flex flex-col items-center mb-4">
+            <img src="logo.png" alt="לוגו Studio Nails" class="h-16 mb-2 rounded-full shadow-md">
+            <div class="flex justify-between items-center w-full">
+                <h1 class="text-2xl font-bold text-gray-800 mx-auto">Studio Nails</h1>
+                <button onclick="logout()" id="logout-btn" class="hidden text-red-500 text-xs font-bold bg-white/50 px-3 py-1 rounded-full absolute left-6 top-6">התנתקות</button>
             </div>
-            
-            <!-- אפשרות 2: SMS דרך אפליקציה חיצונית (בחינם) -->
-            <div class="sms-option">
-                <h4 class="font-bold text-blue-700 mb-2 flex items-center gap-2">
-                    <span>💬 SMS רגיל</span>
-                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">מגבלה יומית</span>
-                </h4>
-                <p class="text-xs text-gray-500 mb-2">שולח SMS דרך אפליקציה חינמית - מוגבל ל-5 הודעות ביום</p>
-                
-                <div class="mb-3">
-                    <label class="block text-sm text-gray-600 mb-1">בחרי מפעיל:</label>
-                    <div class="carrier-selector">
-                        <button type="button" class="carrier-btn" onclick="selectCarrier('cellcom')">📱 סלקום</button>
-                        <button type="button" class="carrier-btn" onclick="selectCarrier('partner')">📱 פרטנר</button>
-                        <button type="button" class="carrier-btn" onclick="selectCarrier('pelephone')">📱 פלאפון</button>
-                        <button type="button" class="carrier-btn" onclick="selectCarrier('hotmobile')">📱 הוט מובייל</button>
-                    </div>
-                </div>
-                
-                <button onclick="sendSMSConfirmation()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
-                    <span>💬</span> שלחי SMS חינם
-                </button>
-                <p class="text-xs text-gray-400 mt-2 text-center">* פותח חלון לשליחה ידנית דרך האפליקציה</p>
-            </div>
-            
-            <button onclick="closePhoneModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 rounded-xl mt-2">
-                לא עכשיו
-            </button>
         </div>
-    </div>
 
-    <div id="app" class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-pink-100 flex">
-        
-        <!-- צד ימין - תמונה -->
-        <div class="hidden md:block md:w-1/2 right-bg"></div>
+        <div id="login-screen" class="flex-1 flex flex-col justify-center space-y-4">
+            <input type="password" id="auth-code" class="input-style text-center text-2xl tracking-widest" placeholder="****" maxlength="4" onkeypress="if(event.key === 'Enter') handleLogin()">
+            <button onclick="handleLogin()" class="btn-gold">כניסה למערכת</button>
+        </div>
 
-        <!-- צד שמאל - תוכן -->
-        <div class="w-full md:w-1/2 bg-white p-6 md:p-8">
-
-            <!-- מסך כניסה -->
-            <div id="login-screen" class="block">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-pink-200 rounded-full flex items-center justify-center mx-auto mb-3 text-pink-600 font-bold text-3xl">💅</div>
-                    <h1 class="text-3xl font-bold text-gray-800">Studio Nails</h1>
-                    <p class="text-pink-500">טיפול מקצועי · עיצוב מדויק</p>
+        <div id="admin-screen" class="hidden flex-col h-full overflow-hidden">
+            <div class="flex gap-4 mb-4 border-b">
+                <button id="tab-a-list" onclick="switchAdminTab('list')" class="flex-1 pb-2 tab-active">יומן</button>
+                <button id="tab-a-set" onclick="switchAdminTab('set')" class="flex-1 pb-2 text-gray-400">שעות</button>
+            </div>
+            
+            <div id="admin-content-list" class="overflow-y-auto flex-1 space-y-2">
                 </div>
-
-                <div class="space-y-4 max-w-sm mx-auto">
-                    <label class="block text-sm font-medium text-gray-700">קוד כניסה:</label>
-                    <input type="password" id="auth-code" class="w-full p-4 text-center text-2xl tracking-widest border-2 border-pink-100 rounded-xl focus:outline-none focus:border-pink-300" placeholder="****" maxlength="4">
-                    <button onclick="handleLogin()" class="w-full bg-[#b88a6a] hover:bg-[#a67656] text-white font-bold py-4 rounded-xl shadow-lg transition-all">
-                        כניסה
-                    </button>
-                    <div id="auth-status" class="text-center text-xs text-gray-400 mt-2">מתחברת...</div>
-                    <p class="text-sm text-center text-gray-400">(1234 ללקוחה, 9999 לאדמין)</p>
-                </div>
+            
+            <div id="admin-reminder-area" class="mt-4">
+                <button onclick="sendDailySummary()" class="btn-gold text-sm py-3 mb-2">📋 שלחי לעצמי סיכום יומי לוואטסאפ</button>
             </div>
 
-            <!-- ממשק לקוחה -->
-            <div id="client-screen" class="hidden flex flex-col h-[650px]">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">היי גירל ✨</h2>
-                    <button onclick="logout()" class="text-pink-400 text-sm underline">התנתקות</button>
-                </div>
-                
-                <div class="flex border-b border-gray-100 mb-4">
-                    <button id="tab-book" onclick="switchClientTab('book')" class="flex-1 py-2 text-center tab-active">קביעת תור</button>
-                    <button id="tab-my" onclick="switchClientTab('my')" class="flex-1 py-2 text-center text-gray-400">התורים שלי</button>
-                </div>
+            <div id="admin-content-set" class="hidden flex-1 flex flex-col">
+                <select id="admin-day-select" class="input-style" onchange="loadAdminHours()">
+                    <option value="0">יום ראשון</option>
+                    <option value="1">יום שני</option>
+                    <option value="2">יום שלישי</option>
+                    <option value="3">יום רביעי</option>
+                    <option value="4">יום חמישי</option>
+                    <option value="5">יום שישי</option>
+                </select>
+                <div id="admin-hours-grid" class="grid grid-cols-3 gap-2 overflow-y-auto flex-1 mb-4"></div>
+                <button onclick="saveAdminHours()" class="btn-gold">שמור הגדרות</button>
+            </div>
+        </div>
 
-                <!-- תוכן קביעת תור -->
-                <div id="content-book" class="flex-1 overflow-y-auto space-y-4 form-container">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-500 mb-1">שם מלא:</label>
-                        <input type="text" id="client-name" class="w-full p-3 border border-pink-100 rounded-lg outline-none focus:border-[#b88a6a]" placeholder="איך קוראים לך?" onchange="validateField('name')">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-500 mb-1">סוג טיפול:</label>
-                        <select id="service-type" class="w-full p-3 border border-pink-100 rounded-lg outline-none focus:border-[#b88a6a]">
-                            <option>בניית ציפורניים</option>
-                            <option>מילוי</option>
-                            <option>לק ג׳ל</option>
-                        </select>
-                    </div>
-
-                    <!-- לוח שנה -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-500 mb-1">תאריך:</label>
-                        <div id="selected-date-display" class="mb-2 p-2 bg-pink-50 rounded-lg text-center font-bold text-sm hidden"></div>
-                        <div id="custom-calendar" class="custom-calendar"></div>
-                        
-                        <!-- מקרא -->
-                        <div class="legend-compact">
-                            <div class="legend-item"><span class="legend-color bg-blue-500"></span> זמין</div>
-                            <div class="legend-item"><span class="legend-color bg-gray-500"></span> מלא</div>
-                            <div class="legend-item"><span class="legend-color bg-gray-200"></span> אין שעות</div>
-                        </div>
-                    </div>
-
-                    <div id="time-selection-area" class="hidden">
-                        <label class="block text-sm font-bold text-gray-500 mb-1">שעה:</label>
-                        <select id="appointment-time" class="w-full p-3 border border-pink-100 rounded-lg outline-none focus:border-[#b88a6a]"></select>
-                        <p id="no-times-msg" class="text-sm text-red-400 mt-2 hidden font-bold">אין שעות פנויות ביום זה</p>
-                    </div>
-
-                    <button id="book-btn" onclick="bookAppointment()" class="w-full bg-[#b88a6a] hover:bg-[#a67656] text-white font-bold py-4 rounded-xl shadow-lg mt-4 flex items-center justify-center text-lg">
-                        <span id="btn-text">קבעי לי תור!</span>
-                        <span id="btn-loader" class="loader hidden"></span>
-                    </button>
-
-                    <div id="success-area" class="hidden p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-center mt-4 font-bold">
-                        התור נקבע בהצלחה! ❤️
-                    </div>
-                </div>
-
-                <!-- התורים שלי -->
-                <div id="content-my" class="hidden flex-1 overflow-y-auto">
-                    <input type="text" id="search-name" oninput="filterMyAppointments()" class="w-full p-3 border border-pink-100 rounded-xl mb-4" placeholder="חפשי לפי שמך...">
-                    <div id="my-appointments-list" class="space-y-3"></div>
-                </div>
+        <div id="client-screen" class="hidden flex-col h-full overflow-hidden">
+            <div class="flex gap-4 mb-4 border-b text-sm">
+                <button id="tab-c-book" onclick="switchClientTab('book')" class="flex-1 pb-2 tab-active">קביעת תור</button>
+                <button id="tab-c-my" onclick="switchClientTab('my')" class="flex-1 pb-2 text-gray-400">התורים שלי</button>
             </div>
 
-            <!-- ממשק אדמין -->
-            <div id="admin-screen" class="hidden h-[650px] flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">ניהול יומן</h2>
-                    <button onclick="logout()" class="text-pink-400 text-sm underline">התנתקות</button>
-                </div>
+            <div id="client-content-book" class="flex-1 flex flex-col overflow-y-auto">
+                <input type="text" id="c-name" class="input-style" placeholder="שם מלא">
+                <input type="tel" id="c-phone" class="input-style" placeholder="מספר טלפון">
                 
-                <div class="flex border-b border-gray-100 mb-4">
-                    <button id="admin-tab-list" onclick="switchAdminTab('list')" class="flex-1 py-2 text-center tab-active">תורים</button>
-                    <button id="admin-tab-settings" onclick="switchAdminTab('settings')" class="flex-1 py-2 text-center text-gray-400">הגדרת שעות</button>
-                </div>
-
-                <!-- רשימת תורים -->
-                <div id="admin-content-list" class="flex-1 flex flex-col overflow-hidden">
-                    <input type="date" id="admin-date-filter" onchange="renderAdminList()" class="w-full p-2 border border-pink-100 rounded-lg mb-2">
-                    <div class="flex-1 overflow-y-auto space-y-3" id="appointments-list"></div>
-                </div>
-
-                <!-- הגדרת שעות -->
-                <div id="admin-content-settings" class="hidden flex-1 overflow-y-auto space-y-4">
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <p class="text-sm text-blue-600 font-bold mb-2">בחרי יום:</p>
-                        <input type="date" id="settings-day-picker" onchange="loadDaySettings()" class="w-full p-2 border border-blue-200 rounded-lg">
+                <div class="bg-white rounded-2xl p-4 mb-4">
+                    <div class="text-center font-bold mb-2 text-gray-700" id="calendar-month">מרץ 2026</div>
+                    <div class="calendar-grid">
+                        <div class="day-header">א</div><div class="day-header">ב</div><div class="day-header">ג</div>
+                        <div class="day-header">ד</div><div class="day-header">ה</div><div class="day-header">ו</div><div class="day-header">ש</div>
                     </div>
-
-                    <div id="day-config-area" class="hidden space-y-4">
-                        <div class="bg-white p-4 rounded-xl border border-pink-100 shadow-sm">
-                            <h3 class="font-bold mb-3 text-pink-600">שעות עבודה:</h3>
-                            <div id="day-times-list" class="grid grid-cols-3 gap-2 mb-3"></div>
-                            <div class="flex gap-2">
-                                <input type="time" id="add-time-input" class="flex-1 p-2 border rounded-lg">
-                                <button onclick="addTimeToDay()" class="bg-[#b88a6a] text-white px-4 py-2 rounded-lg">+</button>
-                            </div>
-                        </div>
-                        <button onclick="saveDaySettings()" id="save-day-btn" class="w-full bg-[#b88a6a] text-white py-3 rounded-xl font-bold">שמירת שעות</button>
-                    </div>
+                    <div id="calendar-days" class="calendar-grid mt-1"></div>
                 </div>
+
+                <div id="c-times-grid" class="grid grid-cols-3 gap-2 mb-4"></div>
+                <button onclick="bookApt()" class="btn-whatsapp mb-4">שרייני ושלחי בוואטסאפ</button>
+            </div>
+
+            <div id="client-content-my" class="hidden flex-1 flex flex-col">
+                <input type="text" id="search-name" class="input-style" placeholder="הזיני שם לצפייה בתורים שלך..." oninput="renderMyAppointments()">
+                <div id="my-apts-list" class="flex-1 overflow-y-auto space-y-2 mt-2"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== משתנים גלובליים ====================
-        let allAppointments = [];
-        let flexibleSchedule = {}; 
-        let currentEditingDay = "";
+        let appointments = JSON.parse(localStorage.getItem('studio_apts') || '[]');
+        let workHours = JSON.parse(localStorage.getItem('studio_hours_v2') || '{"0":["09:00","10:00"],"1":["11:00"],"2":[],"3":[],"4":[],"5":[]}');
         let selectedDate = null;
-        let currentYear = new Date().getFullYear();
-        let currentMonthIndex = new Date().getMonth();
-        let currentBooking = null;
-        let selectedCarrier = null;
-        let smsCountToday = 0;
+        let selectedTime = null;
 
-        // מגבלת SMS חינם (דרך אפליקציות)
-        const MAX_FREE_SMS = 5;
-
-        // ==================== טעינה ראשונית ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            loadFromLocalStorage();
-            renderCalendar();
-            startReminderChecker();
-            resetSmsCount();
-        });
-
-        // איפוס מונה SMS בכל יום
-        function resetSmsCount() {
-            const lastDate = localStorage.getItem('sms_last_date');
-            const today = new Date().toDateString();
-            
-            if (lastDate !== today) {
-                smsCountToday = 0;
-                localStorage.setItem('sms_last_date', today);
-                localStorage.setItem('sms_count', '0');
-            } else {
-                smsCountToday = parseInt(localStorage.getItem('sms_count') || '0');
-            }
-        }
-
-        // ==================== אחסון מקומי (localStorage) ====================
-        function saveToLocalStorage() {
-            localStorage.setItem('studioNails_appointments', JSON.stringify(allAppointments));
-            localStorage.setItem('studioNails_schedule', JSON.stringify(flexibleSchedule));
-        }
-
-        function loadFromLocalStorage() {
-            const savedAppointments = localStorage.getItem('studioNails_appointments');
-            if (savedAppointments) {
-                allAppointments = JSON.parse(savedAppointments);
-            } else {
-                createSampleData();
-            }
-
-            const savedSchedule = localStorage.getItem('studioNails_schedule');
-            if (savedSchedule) {
-                flexibleSchedule = JSON.parse(savedSchedule);
-            } else {
-                createSampleSchedule();
-            }
-        }
-
-        function createSampleData() {
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            allAppointments = [
-                {
-                    id: 'demo1',
-                    clientName: 'מיכל לוי',
-                    date: formatDate(tomorrow),
-                    time: '10:00',
-                    serviceType: 'לק ג׳ל',
-                    phone: '0501234567',
-                    reminderSent: false,
-                    timestamp: Date.now()
-                }
-            ];
-        }
-
-        function createSampleSchedule() {
-            flexibleSchedule = {};
-            
-            for (let i = 1; i <= 30; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() + i);
-                const dateStr = formatDate(date);
-                
-                if (i % 3 === 0) {
-                    flexibleSchedule[dateStr] = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
-                } else if (i % 3 === 1) {
-                    flexibleSchedule[dateStr] = ['09:00', '10:00', '11:00', '12:00'];
-                    
-                    flexibleSchedule[dateStr].forEach((time, index) => {
-                        allAppointments.push({
-                            id: `demo-${i}-${index}`,
-                            clientName: `לקוחה ${index + 1}`,
-                            date: dateStr,
-                            time: time,
-                            serviceType: 'לק ג׳ל',
-                            reminderSent: false,
-                            timestamp: Date.now()
-                        });
-                    });
-                } else {
-                    flexibleSchedule[dateStr] = [];
-                }
-            }
-            
-            saveToLocalStorage();
-        }
-
-        // פונקציות עזר
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function formatDateForDisplay(dateStr) {
-            const parts = dateStr.split('-');
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        function getMonthName(monthIndex) {
-            const months = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-            return months[monthIndex];
-        }
-
-        // ==================== בחירת מפעיל ====================
-        window.selectCarrier = function(carrier) {
-            selectedCarrier = carrier;
-            
-            document.querySelectorAll('.carrier-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            event.target.classList.add('selected');
-        };
-
-        // ==================== שליחת SMS דרך אפליקציות חיצוניות ====================
-        function openSMSService(phone, message) {
-            const cleanPhone = phone.replace(/\D/g, '');
-            
-            // רשימה של שירותי SMS חינמיים
-            const smsServices = [
-                `https://api.whatsapp.com/send?phone=972${cleanPhone}&text=${encodeURIComponent(message)}`, // וואטסאפ
-                `https://sms.co.il/?to=${cleanPhone}&body=${encodeURIComponent(message)}`, // SMS.co.il
-                `sms:${cleanPhone}?body=${encodeURIComponent(message)}` // SMS רגיל (יפתח אפליקציית SMS)
-            ];
-            
-            // פותח חלון עם אפשרויות
-            const choice = confirm(`בחרי איך לשלוח:\n✅ אישור - לפתוח בוואטסאפ\n❌ ביטול - לפתוח ב-SMS רגיל`);
-            
-            if (choice) {
-                // וואטסאפ
-                window.open(smsServices[0], '_blank');
-                return 'whatsapp';
-            } else {
-                // SMS רגיל
-                window.open(smsServices[2], '_blank');
-                return 'sms';
-            }
-        }
-
-        // ==================== ולידציה ====================
-        function validateField(field) {
-            if (field === 'name') {
-                const nameInput = document.getElementById('client-name');
-                if (nameInput.value.trim() === '') {
-                    nameInput.classList.add('field-error');
-                    return false;
-                } else {
-                    nameInput.classList.remove('field-error');
-                    return true;
-                }
-            }
-            return true;
-        }
-
-        function validateAllFields() {
-            const name = document.getElementById('client-name').value.trim();
-            const date = selectedDate;
-            
-            if (!name) {
-                document.getElementById('client-name').classList.add('field-error');
-                showToast('נא להזין שם', 'error');
-                return false;
-            }
-            
-            if (!date) {
-                showToast('נא לבחור תאריך מהלוח', 'error');
-                return false;
-            }
-            
-            return true;
-        }
-
-        // ==================== כניסה ויציאה ====================
-        window.handleLogin = function() {
+        function handleLogin() {
             const code = document.getElementById('auth-code').value;
-            if (code === '1234') {
-                showScreen('client-screen');
-                document.getElementById('auth-status').innerText = 'נכנסת בהצלחה!';
-            } else if (code === '9999') {
-                showScreen('admin-screen');
-                document.getElementById('auth-status').innerText = 'נכנסת בהצלחה!';
-            } else {
-                alert("קוד שגוי, נסי שוב (1234 ללקוחה, 9999 לאדמין)");
-            }
-        };
+            if (code === '1234' || code === '9999') {
+                localStorage.setItem('role', code);
+                renderApp();
+            } else alert("קוד שגוי");
+        }
 
-        window.logout = function() {
-            document.getElementById('auth-code').value = '';
-            showScreen('login-screen');
-        };
-
-        function showScreen(id) {
+        function renderApp() {
+            const role = localStorage.getItem('role');
+            if (!role) return;
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('client-screen').classList.add('hidden');
-            document.getElementById('admin-screen').classList.add('hidden');
-            document.getElementById(id).classList.remove('hidden');
-            
-            if (id === 'client-screen') {
+            document.getElementById('logout-btn').classList.remove('hidden');
+            if (role === '9999') {
+                document.getElementById('body-bg').className = "bg-container bg-admin";
+                document.getElementById('admin-screen').classList.remove('hidden');
+                document.getElementById('client-screen').classList.add('hidden');
+                loadAdminList();
+            } else {
+                document.getElementById('body-bg').className = "bg-container bg-client";
+                document.getElementById('client-screen').classList.remove('hidden');
+                document.getElementById('admin-screen').classList.add('hidden');
                 renderCalendar();
-                switchClientTab('book');
-            } else if (id === 'admin-screen') {
-                renderAdminList();
             }
         }
 
-        window.switchClientTab = function(tab) {
-            const isBook = tab === 'book';
-            document.getElementById('tab-book').className = isBook ? 'flex-1 py-2 text-center tab-active' : 'flex-1 py-2 text-center text-gray-400';
-            document.getElementById('tab-my').className = !isBook ? 'flex-1 py-2 text-center tab-active' : 'flex-1 py-2 text-center text-gray-400';
-            document.getElementById('content-book').classList.toggle('hidden', !isBook);
-            document.getElementById('content-my').classList.toggle('hidden', isBook);
-            
-            if (isBook) {
-                renderCalendar();
-            }
-        };
+        function switchClientTab(t) {
+            document.getElementById('client-content-book').classList.toggle('hidden', t!=='book');
+            document.getElementById('client-content-my').classList.toggle('hidden', t!=='my');
+            document.getElementById('tab-c-book').className = t==='book' ? 'flex-1 pb-2 tab-active' : 'flex-1 pb-2 text-gray-400';
+            document.getElementById('tab-c-my').className = t==='my' ? 'flex-1 pb-2 tab-active' : 'flex-1 pb-2 text-gray-400';
+        }
 
-        window.switchAdminTab = function(tab) {
-            const isList = tab === 'list';
-            document.getElementById('admin-tab-list').className = isList ? 'flex-1 py-2 text-center tab-active' : 'flex-1 py-2 text-center text-gray-400';
-            document.getElementById('admin-tab-settings').className = !isList ? 'flex-1 py-2 text-center tab-active' : 'flex-1 py-2 text-center text-gray-400';
-            document.getElementById('admin-content-list').classList.toggle('hidden', !isList);
-            document.getElementById('admin-content-settings').classList.toggle('hidden', isList);
-        };
+        function renderCalendar() {
+            const container = document.getElementById('calendar-days');
+            container.innerHTML = '';
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
-        // ==================== לוח שנה ====================
-        window.renderCalendar = function() {
-            const calendarEl = document.getElementById('custom-calendar');
-            if (!calendarEl) return;
-            
-            const year = currentYear;
-            const month = currentMonthIndex;
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            
-            const startDay = firstDay.getDay();
-            const daysInMonth = lastDay.getDate();
-            
-            const weekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-            
-            let html = `
-                <div class="calendar-header">
-                    <button class="nav-btn" onclick="changeMonth(-1)">←</button>
-                    <span class="calendar-month">${getMonthName(month)} ${year}</span>
-                    <button class="nav-btn" onclick="changeMonth(1)">→</button>
-                </div>
-                <div class="calendar-weekdays">
-                    ${weekdays.map(d => `<div>${d}</div>`).join('')}
-                </div>
-                <div class="calendar-days">
-            `;
-            
-            for (let i = 0; i < startDay; i++) {
-                html += `<div class="calendar-day empty"></div>`;
-            }
-            
+            for (let i = 0; i < firstDay; i++) container.innerHTML += '<div></div>';
+
             for (let d = 1; d <= daysInMonth; d++) {
-                const date = new Date(year, month, d);
-                const dateStr = formatDate(date);
+                const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dayOfWeek = new Date(dateStr).getDay();
+                const isAvailable = workHours[dayOfWeek] && workHours[dayOfWeek].length > 0;
                 
-                const times = flexibleSchedule[dateStr] || [];
-                const taken = allAppointments.filter(a => a.date === dateStr).map(a => a.time);
-                const availableCount = times.filter(t => !taken.includes(t)).length;
-                
-                let dayClass = 'calendar-day';
-                if (times.length === 0) {
-                    dayClass += ' empty-day';
-                } else if (availableCount > 0) {
-                    dayClass += ' available';
-                } else {
-                    dayClass += ' unavailable';
+                const div = document.createElement('div');
+                div.className = `calendar-day ${isAvailable ? 'day-available' : 'text-gray-300'}`;
+                div.innerText = d;
+                if (isAvailable) {
+                    div.onclick = () => {
+                        document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('day-selected'));
+                        div.classList.add('day-selected');
+                        selectedDate = dateStr;
+                        loadTimesForClient(dayOfWeek);
+                    };
                 }
-                
-                if (selectedDate === dateStr) {
-                    dayClass += ' selected';
-                }
-                
-                html += `<div class="${dayClass}" onclick="selectDate('${dateStr}')">${d}</div>`;
+                container.appendChild(div);
             }
-            
-            html += `</div>`;
-            calendarEl.innerHTML = html;
-        };
-
-        window.changeMonth = function(delta) {
-            currentMonthIndex += delta;
-            if (currentMonthIndex < 0) {
-                currentMonthIndex = 11;
-                currentYear -= 1;
-            } else if (currentMonthIndex > 11) {
-                currentMonthIndex = 0;
-                currentYear += 1;
-            }
-            renderCalendar();
-        };
-
-        window.selectDate = function(dateStr) {
-            if (!validateField('name')) {
-                showToast('קודם יש להזין שם מלא', 'error');
-                return;
-            }
-            
-            selectedDate = dateStr;
-            renderCalendar();
-            
-            const display = document.getElementById('selected-date-display');
-            display.innerHTML = `📅 ${formatDateForDisplay(dateStr)}`;
-            display.classList.remove('hidden');
-            
-            updateAvailableTimes(dateStr);
-        };
-
-        window.updateAvailableTimes = function(dateStr) {
-            const timeSelect = document.getElementById('appointment-time');
-            const msg = document.getElementById('no-times-msg');
-            const bookBtn = document.getElementById('book-btn');
-            const timeArea = document.getElementById('time-selection-area');
-            
-            if (!dateStr) {
-                timeArea.classList.add('hidden');
-                return;
-            }
-
-            const possibleTimes = flexibleSchedule[dateStr] || [];
-            const taken = allAppointments.filter(a => a.date === dateStr).map(a => a.time);
-            const available = possibleTimes.filter(t => !taken.includes(t));
-
-            timeArea.classList.remove('hidden');
-            
-            if (available.length === 0) {
-                timeSelect.innerHTML = '';
-                timeSelect.classList.add('hidden');
-                msg.classList.remove('hidden');
-                bookBtn.classList.add('btn-disabled');
-                bookBtn.disabled = true;
-            } else {
-                msg.classList.add('hidden');
-                timeSelect.classList.remove('hidden');
-                bookBtn.classList.remove('btn-disabled');
-                bookBtn.disabled = false;
-                timeSelect.innerHTML = available.sort().map(t => `<option value="${t}">${t}</option>`).join('');
-            }
-        };
-
-        // ==================== קביעת תור ====================
-        window.bookAppointment = function() {
-            if (!validateAllFields()) return;
-            
-            const name = document.getElementById('client-name').value;
-            const date = selectedDate;
-            const timeSelect = document.getElementById('appointment-time');
-            const time = timeSelect ? timeSelect.value : '';
-            const service = document.getElementById('service-type').value;
-            
-            if (!time) { 
-                showToast("בבקשה בחרי שעה", 'error');
-                return; 
-            }
-
-            const btn = document.getElementById('book-btn');
-            const btnText = document.getElementById('btn-text');
-            const btnLoader = document.getElementById('btn-loader');
-            btn.disabled = true;
-            btnText.classList.add('hidden');
-            btnLoader.classList.remove('hidden');
-            
-            try {
-                const id = 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                const newAppointment = {
-                    id: id,
-                    clientName: name, 
-                    date: date, 
-                    time: time, 
-                    serviceType: service, 
-                    reminderSent: false,
-                    timestamp: Date.now()
-                };
-                
-                allAppointments.push(newAppointment);
-                saveToLocalStorage();
-                
-                showToast(`✅ התור נקבע עבור ${name}!`);
-                
-                const bookingDetails = {
-                    name: name,
-                    date: date,
-                    time: time,
-                    service: service,
-                    appointmentId: id
-                };
-                
-                document.getElementById('client-name').value = '';
-                document.getElementById('client-name').classList.remove('field-error');
-                selectedDate = null;
-                document.getElementById('selected-date-display').classList.add('hidden');
-                document.getElementById('time-selection-area').classList.add('hidden');
-                
-                renderCalendar();
-                
-                setTimeout(() => {
-                    if (confirm(`לשלוח אישור ב-SMS ל-${name}?`)) {
-                        openPhoneModal(bookingDetails);
-                    }
-                }, 500);
-                
-            } catch (e) {
-                console.error("Booking error:", e);
-                showToast("❌ הייתה בעיה", 'error');
-            }
-            
-            btn.disabled = false;
-            btnText.classList.remove('hidden');
-            btnLoader.classList.add('hidden');
-        };
-
-        // ==================== פונקציות SMS ====================
-        window.openPhoneModal = function(bookingDetails) {
-            currentBooking = bookingDetails;
-            selectedCarrier = null;
-            document.querySelectorAll('.carrier-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            document.getElementById('phone-modal').classList.remove('hidden');
-        };
-
-        window.closePhoneModal = function() {
-            document.getElementById('phone-modal').classList.add('hidden');
-            document.getElementById('client-phone').value = '';
-        };
-
-        // שליחת אישור בוואטסאפ
-        window.sendWhatsAppConfirmation = function() {
-            const phone = document.getElementById('client-phone').value.replace(/\D/g, '');
-            if (!phone || phone.length < 9) {
-                showToast('נא להזין מספר טלפון תקין', 'error');
-                return;
-            }
-
-            if (!currentBooking) {
-                closePhoneModal();
-                return;
-            }
-
-            const message = `היי ${currentBooking.name}! 🌸
-התור שלך אושר!
-
-📅 תאריך: ${formatDateForDisplay(currentBooking.date)}
-⏰ שעה: ${currentBooking.time}
-💅 טיפול: ${currentBooking.service}
-
-📍 כתובת: Studio Nails, רחוב הנמל 28, חיפה
-
-נתראה! 💕`;
-
-            const whatsappUrl = `https://wa.me/972${phone}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-
-            const appointment = allAppointments.find(a => a.id === currentBooking.appointmentId);
-            if (appointment) {
-                appointment.phone = phone;
-                saveToLocalStorage();
-            }
-
-            closePhoneModal();
-            showToast(`✅ אישור נשלח ב-WhatsApp`);
-            
-            setTimeout(() => {
-                switchClientTab('my');
-                document.getElementById('search-name').value = currentBooking.name;
-                filterMyAppointments();
-            }, 1500);
-        };
-
-        // שליחת אישור ב-SMS
-        window.sendSMSConfirmation = function() {
-            const phone = document.getElementById('client-phone').value.replace(/\D/g, '');
-            if (!phone || phone.length < 9) {
-                showToast('נא להזין מספר טלפון תקין', 'error');
-                return;
-            }
-
-            if (!currentBooking) {
-                closePhoneModal();
-                return;
-            }
-
-            // בדיקת מגבלת SMS
-            if (smsCountToday >= MAX_FREE_SMS) {
-                if (!confirm(`הגעת למגבלת ה-SMS החינמיים להיום (${MAX_FREE_SMS}). לשלוח בוואטסאפ במקום?`)) {
-                    return;
-                } else {
-                    sendWhatsAppConfirmation();
-                    return;
-                }
-            }
-
-            const message = `היי ${currentBooking.name}! 🌸
-התור אושר: ${formatDateForDisplay(currentBooking.date)} ${currentBooking.time} - ${currentBooking.service}`;
-
-            // שליחה דרך שירות חיצוני
-            const method = openSMSService(phone, message);
-            
-            if (method === 'whatsapp' || method === 'sms') {
-                smsCountToday++;
-                localStorage.setItem('sms_count', smsCountToday.toString());
-                
-                const appointment = allAppointments.find(a => a.id === currentBooking.appointmentId);
-                if (appointment) {
-                    appointment.phone = phone;
-                    saveToLocalStorage();
-                }
-                
-                showToast(`✅ נפתח חלון לשליחת SMS (נותרו ${MAX_FREE_SMS - smsCountToday} היום)`);
-            }
-
-            closePhoneModal();
-        };
-
-        // שליחת תזכורת יום לפני
-        function sendReminder( appointment) {
-            if (!appointment.phone) return false;
-            
-            const message = `היי ${appointment.clientName}! 🌸
-תזכורת: מחר ב-${formatDateForDisplay(appointment.date)} ${appointment.time} - ${appointment.serviceType}`;
-            
-            // ב-WhatsApp
-            const whatsappUrl = `https://wa.me/972${appointment.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            
-            return true;
         }
 
-        // בדיקת תזכורות
-        function startReminderChecker() {
-            setInterval(checkAndSendReminders, 60 * 60 * 1000);
-            checkAndSendReminders();
-        }
-
-        function checkAndSendReminders() {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = formatDate(tomorrow);
-            
-            allAppointments.forEach(appointment => {
-                if (appointment.date === tomorrowStr && !appointment.reminderSent && appointment.phone) {
-                    sendReminder(appointment);
-                    appointment.reminderSent = true;
-                    saveToLocalStorage();
-                    
-                    if (!document.getElementById('admin-screen').classList.contains('hidden')) {
-                        showToast(`📱 תזכורת נשלחה ל-${appointment.clientName}`);
-                    }
+        function loadTimesForClient(day) {
+            const grid = document.getElementById('c-times-grid');
+            grid.innerHTML = '';
+            const taken = appointments.filter(a => a.date === selectedDate).map(a => a.time);
+            workHours[day].forEach(t => {
+                if (!taken.includes(t)) {
+                    const div = document.createElement('div');
+                    div.className = 'time-chip';
+                    div.innerText = t;
+                    div.onclick = () => {
+                        document.querySelectorAll('.time-chip').forEach(el => el.classList.remove('selected'));
+                        div.classList.add('selected');
+                        selectedTime = t;
+                    };
+                    grid.appendChild(div);
                 }
             });
         }
 
-        // שליחת תזכורת ידנית
-        window.sendManualReminder = function(id) {
-            const appointment = allAppointments.find(a => a.id === id);
-            if (!appointment || !appointment.phone) {
-                showToast('אין מספר טלפון לתור זה', 'error');
-                return;
-            }
+        function renderMyAppointments() {
+            const name = document.getElementById('search-name').value;
+            const list = document.getElementById('my-apts-list');
+            list.innerHTML = '';
+            if (name.length < 2) return;
+            const myApts = appointments.filter(a => a.name.includes(name));
+            myApts.forEach(a => {
+                list.innerHTML += `<div class="bg-white/80 p-3 rounded-xl border-r-4 border-accent shadow-sm">
+                    <div class="font-bold">${a.date.split('-').reverse().join('.')} | ${a.time}</div>
+                </div>`;
+            });
+        }
+
+        function bookApt() {
+            const name = document.getElementById('c-name').value;
+            const phone = document.getElementById('c-phone').value;
+            if (!name || !phone || !selectedDate || !selectedTime) return alert("מלאי את כל הפרטים");
             
-            sendReminder(appointment);
-            appointment.reminderSent = true;
-            saveToLocalStorage();
-            showToast(`✅ תזכורת נשלחה ל-${appointment.clientName}`);
-            renderAdminList();
-        };
+            const newApt = { id: Date.now(), name, phone, date: selectedDate, time: selectedTime };
+            appointments.push(newApt);
+            localStorage.setItem('studio_apts', JSON.stringify(appointments));
+            
+            const msg = `היי! קבעתי תור ל${name} בתאריך ${selectedDate.split('-').reverse().join('.')} בשעה ${selectedTime}`;
+            window.open(`https://wa.me/972547929057?text=${encodeURIComponent(msg)}`);
+            location.reload();
+        }
 
-        // ==================== ממשק אדמין ====================
-        window.loadDaySettings = function() {
-            currentEditingDay = document.getElementById('settings-day-picker').value;
-            if (!currentEditingDay) return;
-            document.getElementById('day-config-area').classList.remove('hidden');
-            renderDayTimes();
-        };
-
-        function renderDayTimes() {
-            const list = document.getElementById('day-times-list');
-            const times = flexibleSchedule[currentEditingDay] || [];
-            if (times.length === 0) {
-                list.innerHTML = `<p class="col-span-3 text-center text-gray-400 py-2">אין שעות</p>`;
-            } else {
-                list.innerHTML = times.sort().map(t => `
-                    <div class="flex justify-between items-center bg-pink-50 p-2 rounded text-sm border border-pink-100">
-                        <span>${t}</span>
-                        <button onclick="removeTimeFromDay('${t}')" class="text-red-500">✕</button>
+        // --- לוגיקת אדמין ---
+        function loadAdminList() {
+            const container = document.getElementById('admin-content-list');
+            container.innerHTML = appointments.sort((a,b) => a.date.localeCompare(b.date)).map(a => `
+                <div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
+                    <div>
+                        <div class="font-bold">${a.name}</div>
+                        <div class="text-xs text-gray-500">${a.date.split('-').reverse().join('.')} | ${a.time}</div>
                     </div>
-                `).join('');
+                    <div class="flex gap-2">
+                        <button onclick="editApt(${a.id})" class="text-blue-500 text-sm bg-blue-50 px-2 py-1 rounded-lg">עריכה</button>
+                        <button onclick="cancelApt(${a.id}, '${a.phone}', '${a.name}', '${a.date}', '${a.time}')" class="text-red-500 text-sm bg-red-50 px-2 py-1 rounded-lg">ביטול</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // פונקציה חדשה: שליחת סיכום יומי לאדמין
+        function sendDailySummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayApts = appointments.filter(a => a.date === today).sort((a,b) => a.time.localeCompare(b.time));
+            
+            if (todayApts.length === 0) return alert("אין תורים רשומים להיום.");
+
+            let summary = `📋 *סיכום תורים להיום (${today.split('-').reverse().join('.')})*:\n\n`;
+            todayApts.forEach(a => {
+                summary += `⏰ ${a.time} - ${a.name} (${a.phone})\n`;
+            });
+            summary += `\nסה"כ תורים: ${todayApts.length}`;
+
+            window.open(`https://wa.me/972547929057?text=${encodeURIComponent(summary)}`);
+        }
+
+        function cancelApt(id, phone, name, date, time) {
+            if (confirm(`לבטל את התור של ${name}?`)) {
+                appointments = appointments.filter(a => a.id !== id);
+                localStorage.setItem('studio_apts', JSON.stringify(appointments));
+                const msg = `היי ${name}, התור שלך בתאריך ${date.split('-').reverse().join('.')} בשעה ${time} בוטל.`;
+                const formattedPhone = phone.replace(/\D/g, '').startsWith('0') ? '972' + phone.replace(/\D/g, '').substring(1) : phone.replace(/\D/g, '');
+                window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`);
+                loadAdminList();
             }
         }
 
-        window.addTimeToDay = function() {
-            const val = document.getElementById('add-time-input').value;
-            if (!val) return;
-            if (!flexibleSchedule[currentEditingDay]) flexibleSchedule[currentEditingDay] = [];
-            if (!flexibleSchedule[currentEditingDay].includes(val)) {
-                flexibleSchedule[currentEditingDay].push(val);
-                renderDayTimes();
-                saveToLocalStorage();
-                renderCalendar();
+        function editApt(id) {
+            const apt = appointments.find(a => a.id === id);
+            const newDate = prompt("תאריך חדש (YYYY-MM-DD):", apt.date);
+            const newTime = prompt("שעה חדשה (HH:MM):", apt.time);
+            if (newDate && newTime) {
+                apt.date = newDate; apt.time = newTime;
+                localStorage.setItem('studio_apts', JSON.stringify(appointments));
+                loadAdminList();
             }
-        };
+        }
 
-        window.removeTimeFromDay = function(t) {
-            flexibleSchedule[currentEditingDay] = (flexibleSchedule[currentEditingDay] || []).filter(x => x !== t);
-            renderDayTimes();
-            saveToLocalStorage();
-            renderCalendar();
-        };
+        function loadAdminHours() {
+            const day = document.getElementById('admin-day-select').value;
+            const grid = document.getElementById('admin-hours-grid');
+            grid.innerHTML = '';
+            const hours = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
+            hours.forEach(h => {
+                const div = document.createElement('div');
+                div.className = `time-chip ${workHours[day].includes(h) ? 'selected' : ''}`;
+                div.innerText = h;
+                div.onclick = () => div.classList.toggle('selected');
+                grid.appendChild(div);
+            });
+        }
 
-        window.saveDaySettings = function() {
-            saveToLocalStorage();
-            showToast("✅ הלוז נשמר");
-        };
+        function saveAdminHours() {
+            const day = document.getElementById('admin-day-select').value;
+            const selected = Array.from(document.querySelectorAll('#admin-hours-grid .selected')).map(el => el.innerText);
+            workHours[day] = selected;
+            localStorage.setItem('studio_hours_v2', JSON.stringify(workHours));
+            alert("נשמר בהצלחה!");
+        }
 
-        window.renderAdminList = function() {
-            const list = document.getElementById('appointments-list');
-            const filter = document.getElementById('admin-date-filter').value;
-            let filtered = allAppointments;
-            if (filter) filtered = allAppointments.filter(a => a.date === filter);
-            filtered.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+        function switchAdminTab(t) {
+            document.getElementById('admin-content-list').classList.toggle('hidden', t!=='list');
+            document.getElementById('admin-reminder-area').classList.toggle('hidden', t!=='list');
+            document.getElementById('admin-content-set').classList.toggle('hidden', t!=='set');
+            document.getElementById('tab-a-list').className = t==='list' ? 'flex-1 pb-2 tab-active' : 'flex-1 pb-2 text-gray-400';
+            document.getElementById('tab-a-set').className = t==='set' ? 'flex-1 pb-2 tab-active' : 'flex-1 pb-2 text-gray-400';
+            if (t==='set') loadAdminHours();
+        }
 
-            if (filtered.length === 0) {
-                list.innerHTML = `<p class="text-center text-gray-400 py-10">אין תורים</p>`;
-                return;
-            }
-
-            list.innerHTML = filtered.map(a => {
-                const isTomorrow = a.date === formatDate(new Date(new Date().setDate(new Date().getDate() + 1)));
-                const reminderStatus = a.reminderSent ? '✅ נשלחה' : (a.phone ? '⏳ ממתינה' : '📱 אין טלפון');
-                
-                return `
-                    <div class="p-3 bg-pink-50 rounded-xl border border-pink-100">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-bold text-gray-800">${a.time} - ${a.clientName}</div>
-                                <div class="text-sm text-gray-500">${formatDateForDisplay(a.date)} | ${a.serviceType}</div>
-                                ${a.phone ? `<div class="text-sm text-green-600">📱 ${a.phone}</div>` : ''}
-                                <div class="text-xs mt-1 ${a.reminderSent ? 'text-green-600' : 'text-orange-500'}">תזכורת: ${reminderStatus}</div>
-                            </div>
-                            <div class="flex gap-1">
-                                ${a.phone && !a.reminderSent && isTomorrow ? `
-                                    <button onclick="sendManualReminder('${a.id}')" class="bg-[#25d366] text-white px-2 py-1 rounded-lg text-sm">
-                                        🔔 שלח תזכורת
-                                    </button>
-                                ` : ''}
-                                <button onclick="deleteAppointment('${a.id}')" class="bg-white p-2 rounded-lg text-red-400">🗑️</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        };
-
-        window.deleteAppointment = function(id) {
-            if (confirm("למחוק?")) {
-                allAppointments = allAppointments.filter(a => a.id !== id);
-                saveToLocalStorage();
-                renderAdminList();
-                renderCalendar();
-                showToast("✅ נמחק");
-            }
-        };
-
-        // ==================== התורים שלי ====================
-        window.filterMyAppointments = function() {
-            const q = document.getElementById('search-name').value.toLowerCase();
-            const list = document.getElementById('my-appointments-list');
-            
-            if (q.length < 2) { 
-                list.innerHTML = '<p class="text-center text-gray-400 text-sm">הקלידי לפחות 2 אותיות</p>';
-                return;
-            }
-            
-            const filtered = allAppointments.filter(a => a.clientName && a.clientName.toLowerCase().includes(q));
-            
-            if (filtered.length === 0) {
-                list.innerHTML = '<p class="text-center text-gray-400 text-sm">לא נמצאו תורים</p>';
-            } else {
-                list.innerHTML = filtered.map(a => {
-                    const isTomorrow = a.date === formatDate(new Date(new Date().setDate(new Date().getDate() + 1)));
-                    
-                    return `
-                        <div class="p-3 bg-white border border-pink-100 rounded-lg shadow-sm">
-                            <div class="font-bold">${formatDateForDisplay(a.date)} ${a.time}</div>
-                            <div class="text-sm text-gray-500">${a.serviceType}</div>
-                            ${a.phone ? 
-                                `<div class="text-sm text-green-600 mt-1">📩 ${a.reminderSent ? 'תזכורת נשלחה' : 'אושר'}</div>` : 
-                                '<div class="text-sm text-orange-500 mt-1">⏳ ממתין לאישור</div>'
-                            }
-                            ${isTomorrow && a.phone ? '<div class="text-xs text-pink-500 mt-1">🌟 התור מחר!</div>' : ''}
-                        </div>
-                    `;
-                }).join('');
-            }
-        };
+        function logout() { localStorage.removeItem('role'); location.reload(); }
+        window.onload = renderApp;
     </script>
 </body>
 </html>
